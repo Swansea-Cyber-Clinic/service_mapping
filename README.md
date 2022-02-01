@@ -20,7 +20,7 @@ python3 generate_database.py
 The most recent version of the database schema is available [here](schema_design.md).
 
 ## To do
-- Fix weird character encoding when exporting Excel file to TSV
+- ~~Fix weird character encoding when exporting Excel file to TSV~~
 - Ensure that all entries in the underlying Excel file have all fields (then change schema to have `NOT NULL` flags for all fields in `organisations`)
 
 ## Contributing
