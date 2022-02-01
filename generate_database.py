@@ -72,7 +72,7 @@ con.commit()
 # Organisations
 ## Apologies in advance to any pandas experts, I am going to be iterating through rows of a dataframe in a completely non-vibe adjacent way, I just wanted to make you aware of that fact ahead of time. (Performance wise it's not good in O(n)-esque terms, but because of the size of the dataset, it doesn't really matter, it's not like we have thousands upon thousands of records - let's be pragmatic about this!)
 
-df = pd.read_csv('service_database_v1.txt', sep='\t', encoding='latin-1')
+df = pd.read_csv('service_database_v1.csv', sep=',')
 df = df[df['Forces'].notna()].replace(to_replace='NA', value='')
 
 cat_counter = 0
