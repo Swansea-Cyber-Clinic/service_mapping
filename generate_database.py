@@ -2,6 +2,23 @@ from datetime import datetime
 import sqlite3 as sql
 import pandas as pd
 import os
+import logging
+import argparse
+
+# Logging setup
+parser = argparse.ArgumentParser()
+parser.add_argument(
+  '-v', '--verbose',
+  help="Provides verbose output useful for finding errors in the CSV file",
+  action="store_const", dest="loglevel", const=logging.DEBUG,
+  default=logging.INFO
+)
+
+args = parser.parse_args()
+
+logging.basicConfig(level=args.loglevel, format='%(levelname)s: %(message)s')
+
+errors_extant = False
 
 # Initial database set-up
 if os.path.exists('service_mapping.db'):
@@ -36,6 +53,7 @@ for i in range(4):
 
 cursor.executemany("INSERT INTO police_force VALUES (?, ?, ?)", forces_list)
 con.commit()
+logging.info('Created Police force definitions')
 
 ## Categories
 name = ['BAME', 'Cyber', 'DA', 'DS', 'DV', 'FFI', 'Housing', 'LGBTQ', 'MH', 'OP', 'PFS', 'SP', 'SV', 'VS', 'WS', 'Women', 'YP', 'FP', 'SOB']
@@ -67,6 +85,7 @@ for i in range(len(name)):
 
 cursor.executemany("INSERT INTO category VALUES (?, ?, ?)", category_list)
 con.commit()
+logging.info('Created category definitions')
 
 
 # Organisations
@@ -79,38 +98,55 @@ cat_counter = 0
 forces_counter = 0
 cov_counter = 0
 for i, r in df.iterrows():
-  print(r['Organisation'])
   cursor.execute(
     "INSERT INTO organisation VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     (i, r['Organisation'], r['Description'], r['Address_1'], r['Address_2'], r['City'], r['Postcode'], r['Email_office'], r['Tel_office'], r['Email_help'], r['Tel_help'], r['Web'], datetime.now().strftime('%d/%m/%Y'), datetime.now().strftime('%d/%m/%Y'))
     )
-
   con.commit()
+  logging.debug(f"Inserted {r['Organisation']} into database with id {i}")
   
   categories = r['Service_cat'].split(',')
-  print(categories)
+  logging.debug(f"The following categories are associated with organisation {i}: {categories}")
   categories = [x.strip() for x in categories]
   for c in categories:
-    cat_id = cursor.execute("SELECT cat_id FROM category WHERE category.cat_name=?", (c,)).fetchone()[0]
-    cursor.execute("INSERT INTO category_mapping VALUES (?, ?, ?)", (cat_counter, i, cat_id))
-    con.commit()
-    cat_counter += 1
+    try:
+      cat_id = cursor.execute("SELECT cat_id FROM category WHERE category.cat_name=?", (c,)).fetchone()[0]
+      cursor.execute("INSERT INTO category_mapping VALUES (?, ?, ?)", (cat_counter, i, cat_id))
+      con.commit()
+      logging.debug(f"Created association between category {c} (id: {cat_id}) and organisation {r['Organisation']} (id: {i})")
+      cat_counter += 1
+    except TypeError as e:
+      logging.error(f"Category '{c}' listed for organisation {i} does not correspond to any known category, check line {i+2} of the CSV file.")
+      errors_extant = True
 
   forces = r['Forces'].split(',')
   forces = [x.strip() for x in forces]
   for f in forces:
-    force_id = cursor.execute("SELECT force_id FROM police_force WHERE police_force.force_code=?", (f,)).fetchone()[0]
-    cursor.execute("INSERT INTO police_force_mapping VALUES (?, ?, ?)", (forces_counter, i, force_id))
-    con.commit()
-    forces_counter += 1
+    try:
+      force_id = cursor.execute("SELECT force_id FROM police_force WHERE police_force.force_code=?", (f,)).fetchone()[0]
+      cursor.execute("INSERT INTO police_force_mapping VALUES (?, ?, ?)", (forces_counter, i, force_id))
+      con.commit()
+      logging.debug(f"Created association between Police force {f} (id: {force_id}) and organisation {r['Organisation']} (id: {i})")
+      forces_counter += 1
+    except TypeError as e:
+      logging.error(f"Police force '{f}' listed for organisation {i} does not correspond to any known Police force, check line {i+2} of the CSV file.")
+      errors_extant = True
   
   countries_list = r['Coverage'].split(',')
-  print(countries_list)
   countries_list = [x.strip() for x in countries_list]
   for cn in countries_list:
-    country_id = cursor.execute("SELECT cov_id FROM coverage WHERE coverage.cov_nation=?", (cn,)).fetchone()[0]
-    cursor.execute("INSERT INTO coverage_mapping VALUES (?, ?, ?)", (cov_counter, i, country_id))
-    con.commit()
-    cov_counter += 1
+    try:
+      country_id = cursor.execute("SELECT cov_id FROM coverage WHERE coverage.cov_nation=?", (cn,)).fetchone()[0]
+      cursor.execute("INSERT INTO coverage_mapping VALUES (?, ?, ?)", (cov_counter, i, country_id))
+      con.commit()
+      logging.debug(f"Created association between country {cn} (id: {country_id}) and organisation {r['Organisation']} (id: {i})")
+      cov_counter += 1
+    except TypeError as e:
+      logging.error(f"Country '{cn}' listed for organisation {i} does not correspond to any known country, check line {i+2} of the CSV file.")
+      errors_extant = True
 
+num_orgs = cursor.execute("SELECT COUNT(*) FROM organisation").fetchone()[0]
 con.close()
+if errors_extant:
+  logging.warning("There are errors in the CSV file from which this database was generated. See previous output for details, in any case, you should not use the output of this tool until you have rectified this.")
+logging.info(f"Database generated, added {num_orgs} organisation(s).")
