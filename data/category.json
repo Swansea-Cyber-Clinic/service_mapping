@@ -1,0 +1,82 @@
+[
+  {
+    "name": "BAME",
+    "description": "Support for Black, Asian, and Minority Ethnic people"
+  },
+  {
+    "name": "Cyber",
+    "description": "Cyber security expert support and advice"
+  },
+  {
+    "name": "DA",
+    "description": "Drug and alcohol support"
+  },
+  {
+    "name": "DS",
+    "description": "Disability support services"
+  },
+  {
+    "name": "DV",
+    "description": "Domestic violence support services"
+  },
+  {
+    "name": "FFI",
+    "description": "Financial, debt, fraud, and identity protection services and advice"
+  },
+  {
+    "name": "Housing",
+    "description": "Housing, housing benefits, and homelessness support"
+  },
+  {
+    "name": "LGBTQ",
+    "description": "Support services for LGBTQ+ people"
+  },
+  {
+    "name": "MH",
+    "description": "Mental health support services"
+  },
+  {
+    "name": "OP",
+    "description": "Support services for older people"
+  },
+  {
+    "name": "PFS",
+    "description": "Support for families and partners"
+  },
+  {
+    "name": "SP",
+    "description": "Suicice prevention"
+  },
+  {
+    "name": "SV",
+    "description": "Sexual violence support services"
+  },
+  {
+    "name": "VS",
+    "description": "General support for crime victims"
+  },
+  {
+    "name": "WS",
+    "description": "Welfare support services"
+  },
+  {
+    "name": "Women",
+    "description": "Support services for women"
+  },
+  {
+    "name": "YP",
+    "description": "Support services for children and young people"
+  },
+  {
+    "name": "FP",
+    "description": "Support services to alleviate fuel poverty"
+  },
+  {
+    "name": "SOB",
+    "description": "Support for victims of stalking and online abuse"
+  },
+  {
+    "name": "HAR",
+    "description": "Stalking and harassment support"
+  }
+]

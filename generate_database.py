@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from pathlib import Path
 import sqlite3 as sql
 import pandas as pd
@@ -46,63 +47,25 @@ cursor = con.cursor()
 cursor.executescript(sql_script)
 
 # Commiting pre-defined information to database
+countries_file = open('data/country.json')
+countries = json.load(countries_file)
 
-## Coverage
-countries = [
-  'Wales', 'England', 'NI', 'Scotland'
-]
-
-coverage_list = []
-for i in range(4):
-  coverage_list.append((i, countries[i]))
-
-cursor.executemany("INSERT INTO coverage VALUES (?, ?)", coverage_list)
+for index, item in enumerate(countries):
+  cursor.execute("INSERT INTO coverage VALUES (?, ?)", (index, item))
+  logging.debug(f"Inserted country {item} into database")
 con.commit()
+logging.info("Created country definitions")
 
-## Police Forces
-force_short = ['DPP', 'GP', 'NWP', 'SWP']
-force_long = ['Dyfed Powys Police', 'Gwent Police', 'North Wales Police', 'South Wales Police']
+for category_type in ('category', 'police_force'):
+  file = open(f"data/{category_type}.json")
+  file_dict = json.load(file)
+  file.close()
 
-forces_list = []
-for i in range(4):
-  forces_list.append((i, force_short[i], force_long[i]))
-
-cursor.executemany("INSERT INTO police_force VALUES (?, ?, ?)", forces_list)
-con.commit()
-logging.info('Created Police force definitions')
-
-## Categories
-name = ['BAME', 'Cyber', 'DA', 'DS', 'DV', 'FFI', 'Housing', 'LGBTQ', 'MH', 'OP', 'PFS', 'SP', 'SV', 'VS', 'WS', 'Women', 'YP', 'FP', 'SOB']
-desc = [
-  'Support services for Black, Asian, and Minority Ethnic people',
-  'Cyber security expert support and advice',
-  'Drug and alcohol support',
-  'Disability support services',
-  'Domestic violence support services',
-  'Financial, debt, fraud, and identity protection services and advice',
-  'Housing, housing benefits, and homelessness support',
-  'Support services for LGBTQ+ people',
-  'Mental health support services',
-  'Support services for older people',
-  'Support for families and parents',
-  'Suicide prevention',
-  'Sexual violence support services',
-  'General support for crime victims',
-  'Welfare support services',
-  'Support services for women',
-  'Support services for children and young people',
-  'Support services to alleviate fuel poverty',
-  'Support for victims of stalking and online abuse'
-]
-
-category_list = []
-for i in range(len(name)):
-  category_list.append((i, name[i], desc[i]))
-
-cursor.executemany("INSERT INTO category VALUES (?, ?, ?)", category_list)
-con.commit()
-logging.info('Created category definitions')
-
+  for index, item in enumerate(file_dict):
+    cursor.execute(f"INSERT INTO {category_type} VALUES (?, ?, ?)", (index, item['name'], item['description']))
+    logging.debug(f"Inserted {category_type} {item['name']} ({item['description']}) into database")
+  con.commit()
+  logging.info(f"Created {category_type} definitions")
 
 # Organisations
 ## Apologies in advance to any pandas experts, I am going to be iterating through rows of a dataframe in a completely non-vibe adjacent way, I just wanted to make you aware of that fact ahead of time. (Performance wise it's not good in O(n)-esque terms, but because of the size of the dataset, it doesn't really matter, it's not like we have thousands upon thousands of records - let's be pragmatic about this!)
@@ -119,7 +82,7 @@ for i, r in df.iterrows():
     (i, r['Organisation'], r['Description'], r['Address_1'], r['Address_2'], r['City'], r['Postcode'], r['Email_office'], r['Tel_office'], r['Email_help'], r['Tel_help'], r['Web'], datetime.now().strftime('%d/%m/%Y'), datetime.now().strftime('%d/%m/%Y'))
     )
   con.commit()
-  logging.debug(f"Inserted {r['Organisation']} into database with id {i}")
+  logging.debug(f"Inserted organisation {r['Organisation']} into database with id {i}")
   
   categories = r['Service_cat'].split(',')
   logging.debug(f"The following categories are associated with organisation {i}: {categories}")
