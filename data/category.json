@@ -74,5 +74,9 @@
   {
     "name": "SOB",
     "description": "Support for victims of stalking and online abuse"
+  },
+  {
+    "name": "HAR",
+    "description": "Stalking and harassment support"
   }
 ]
